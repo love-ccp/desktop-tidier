@@ -363,6 +363,7 @@ version = "0.1.0"
 dependencies = [
  "aho-corasick",
  "anyhow",
+ "arc-swap",
  "chardetng",
  "chrono",
  "dirs",
@@ -379,6 +380,7 @@ dependencies = [
  "rustix",
  "serde",
  "serde_json",
+ "tempfile",
  "thiserror 2.0.21",
  "tokio",
  "tracing",

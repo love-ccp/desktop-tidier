@@ -71,3 +71,16 @@ fn resolve_paths_is_idempotent() {
     config.resolve_paths(path.parent().unwrap());
     assert_eq!(config.storage.course_dir, once, "重复解析不应二次拼接");
 }
+
+#[test]
+fn schema_hint_key_is_accepted() {
+    // `$schema` 是可选编辑器提示键：schema 已声明该属性，加载时不再当作多余字段。
+    let dir = common::TempDir::new();
+    let path = dir.join("config.json");
+    let mut value: serde_json::Value = serde_json::from_str(example_str()).unwrap();
+    value["$schema"] = serde_json::json!("https://example.local/course-organizer/schema.json");
+    std::fs::write(&path, serde_json::to_string_pretty(&value).unwrap()).unwrap();
+
+    let config = Config::load(&path).unwrap();
+    assert_eq!(config.watcher.min_age_days, 3);
+}

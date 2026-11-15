@@ -21,6 +21,8 @@ tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 jsonschema = "0.61"
+# 无锁配置热重载快照（ArcSwap<Arc<Config>>）
+arc-swap = "1"
 # 日志：tracing 单文件 writer（不用 tracing-appender）
 tracing = "0.1"
 tracing-subscriber = "0.3"
@@ -59,6 +61,9 @@ windows = { version = "0.62", features = ["Win32_Foundation", "Win32_System_Thre
 ksni = "0.3"
 libc = "0.2"
 rustix = { version = "1", features = ["fs", "process"] }
+
+[dev-dependencies]
+tempfile = "3"
 
 [profile.release]
 strip = true

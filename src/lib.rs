@@ -6,6 +6,8 @@
 pub mod config;
 pub mod error;
 pub mod logger;
+pub mod platform;
+pub mod timesync;
 
 pub use error::{Error, Result};
 

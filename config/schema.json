@@ -6,6 +6,7 @@
   "additionalProperties": false,
   "required": ["watcher", "storage", "classifier", "archiver", "indexer", "logger", "timesync", "notify", "concurrency"],
   "properties": {
+    "$schema": { "type": "string", "description": "编辑器提示：引用的 JSON Schema 路径（可选，不参与程序逻辑）" },
     "watcher": {
       "type": "object",
       "additionalProperties": false,

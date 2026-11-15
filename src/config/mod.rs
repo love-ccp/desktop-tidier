@@ -10,8 +10,9 @@ pub use error::{ConfigError, ValidationIssue};
 pub use schema::example_str;
 
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
+use std::sync::Arc;
 
+use arc_swap::ArcSwap;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -124,12 +125,13 @@ impl Config {
         }
         let text = std::fs::read_to_string(path)?;
         let mut value: Value = serde_json::from_str(&text).map_err(ConfigError::Syntax)?;
-        // `$schema` 是编辑器提示键，不属于配置字段（schema 设置了 additionalProperties:false）。
-        if let Some(obj) = value.as_object_mut() {
-            obj.remove("$schema");
-        }
+        // `$schema` 是可选编辑器提示键（schema 已声明该属性）：先完整校验，
+        // 再剥掉该键后反序列化到 Config（Config 使用 deny_unknown_fields）。
         if let Err(message) = schema::validate(&value) {
             return Err(ConfigError::Validation(message).into());
+        }
+        if let Some(obj) = value.as_object_mut() {
+            obj.remove("$schema");
         }
         let mut config: Config = serde_json::from_value(value)?;
         if let Some(base) = path.parent().filter(|p| !p.as_os_str().is_empty()) {
@@ -169,11 +171,10 @@ impl Config {
     }
 }
 
-/// 热重载存储：`RwLock<Arc<Config>>`（等价于规格中的 ArcSwap 语义，
-/// 用标准库实现以避免额外依赖）。
+/// 热重载存储：无锁 `ArcSwap<Arc<Config>>`，`get()` 无需加锁即可拿到一致快照。
 pub struct ConfigStore {
     path: PathBuf,
-    inner: RwLock<Arc<Config>>,
+    inner: ArcSwap<Config>,
 }
 
 impl ConfigStore {
@@ -182,13 +183,13 @@ impl ConfigStore {
         let config = Config::load(path)?;
         Ok(Self {
             path: path.to_path_buf(),
-            inner: RwLock::new(Arc::new(config)),
+            inner: ArcSwap::from_pointee(config),
         })
     }
 
-    /// 当前配置快照。
+    /// 当前配置快照（无锁读取，返回 `Arc<Config>`）。
     pub fn get(&self) -> Arc<Config> {
-        read_lock(&self.inner).clone()
+        self.inner.load_full()
     }
 
     /// 重新加载；成功返回 [`ReloadOutcome::Reloaded`] 并原子替换，
@@ -197,7 +198,7 @@ impl ConfigStore {
         match Config::load(&self.path) {
             Ok(new_config) => {
                 let arc = Arc::new(new_config);
-                *write_lock(&self.inner) = Arc::clone(&arc);
+                self.inner.store(Arc::clone(&arc));
                 Ok(ReloadOutcome::Reloaded(arc))
             }
             Err(e) => Ok(ReloadOutcome::Rejected(e.to_string())),
@@ -210,16 +211,4 @@ impl ConfigStore {
 pub enum ReloadOutcome {
     Reloaded(Arc<Config>),
     Rejected(String),
-}
-
-/// 读取锁（中毒时恢复，避免 panic）。
-fn read_lock<T>(lock: &RwLock<T>) -> RwLockReadGuard<'_, T> {
-    lock.read()
-        .unwrap_or_else(std::sync::PoisonError::into_inner)
-}
-
-/// 写锁（中毒时恢复，避免 panic）。
-fn write_lock<T>(lock: &RwLock<T>) -> RwLockWriteGuard<'_, T> {
-    lock.write()
-        .unwrap_or_else(std::sync::PoisonError::into_inner)
 }
