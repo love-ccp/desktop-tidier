@@ -1,6 +1,6 @@
 //! Windows 平台实现（M11）：命名互斥体单实例、注册表 Run 键自启、explorer 打开目录。
 //!
-//! 跨平台能力（回收站 / 通知 / 目录 / mtime）与 Linux 侧一致，直接调用跨平台 crate。
+//! 跨平台能力（回收站 / 通知 / 目录 / 创建时间）与 Linux 侧一致，直接调用跨平台 crate。
 
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
@@ -82,8 +82,13 @@ impl PlatformAdapter for WindowsPlatform {
             .join("desktop-tidier")
     }
 
-    fn mtime(&self, path: &Path) -> Result<SystemTime> {
-        Ok(std::fs::metadata(path)?.modified()?)
+    fn created(&self, path: &Path) -> Result<SystemTime> {
+        let meta = std::fs::metadata(path)?;
+        match meta.created() {
+            Ok(t) => Ok(t),
+            // 极少数文件系统拿不到创建时间时回退修改时间。
+            Err(_) => meta.modified().map_err(Into::into),
+        }
     }
 
     fn set_autostart(&self, enabled: bool) -> Result<bool> {

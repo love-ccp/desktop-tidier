@@ -1,4 +1,4 @@
-//! 测试共享工具：临时目录、固定时钟、假平台、示例配置、mtime 设置。
+//! 测试共享工具：临时目录、固定时钟、假平台、示例配置。
 
 // 该模块被多个测试二进制分别 `mod common;` 引入，部分方法只在部分二进制中使用。
 #![allow(dead_code)]
@@ -93,8 +93,12 @@ impl PlatformAdapter for FakePlatform {
         self.desktop.join("config")
     }
 
-    fn mtime(&self, path: &Path) -> Result<SystemTime> {
-        Ok(std::fs::metadata(path)?.modified()?)
+    fn created(&self, path: &Path) -> Result<SystemTime> {
+        let meta = std::fs::metadata(path)?;
+        match meta.created() {
+            Ok(t) => Ok(t),
+            Err(_) => meta.modified().map_err(Into::into),
+        }
     }
 
     fn set_autostart(&self, enabled: bool) -> Result<bool> {
@@ -119,12 +123,8 @@ pub fn example_config(dir: &Path) -> desktop_tidier::config::Config {
     desktop_tidier::config::Config::load(&path).expect("load example")
 }
 
-/// 把文件 mtime 设为指定时间（用于「mtime 超过 N 天」测试）。
-pub fn set_mtime(path: &Path, t: SystemTime) {
-    let f = std::fs::File::options()
-        .write(true)
-        .open(path)
-        .expect("open");
-    let times = std::fs::FileTimes::new().set_modified(t);
-    f.set_times(times).expect("set_times");
+/// 拨快 N 天的固定时钟。文件「创建时间」无法跨平台回写，
+/// 测试用「文件刚创建 + 时钟超前 N 天」来模拟「N 天前创建」。
+pub fn clock_days_from_now(days: i64) -> FixedClock {
+    FixedClock(chrono::Utc::now() + chrono::Duration::days(days))
 }

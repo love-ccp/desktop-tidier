@@ -4,7 +4,6 @@ mod common;
 
 use std::path::Path;
 use std::sync::Arc;
-use std::time::{Duration, SystemTime};
 
 use desktop_tidier::classifier::Classifier;
 use desktop_tidier::indexer::Indexer;
@@ -12,7 +11,7 @@ use desktop_tidier::organizer::Organizer;
 use desktop_tidier::platform::PlatformAdapter;
 use desktop_tidier::timesync::Clock;
 
-fn build(cfg: &desktop_tidier::config::Config, desktop: &Path) -> Organizer {
+fn build(cfg: &desktop_tidier::config::Config, desktop: &Path, clock: Arc<dyn Clock>) -> Organizer {
     let classifier = Arc::new(
         Classifier::load(Path::new(&cfg.classifier.lexicon_path), "utf-8")
             .expect("classifier load"),
@@ -20,7 +19,6 @@ fn build(cfg: &desktop_tidier::config::Config, desktop: &Path) -> Organizer {
     let platform: Arc<dyn PlatformAdapter> =
         Arc::new(common::FakePlatform::new(desktop.to_path_buf()));
     let indexer = Arc::new(Indexer);
-    let clock: Arc<dyn Clock> = Arc::new(common::FixedClock(chrono::Utc::now()));
     Organizer::new(platform, classifier, indexer, clock)
 }
 
@@ -43,11 +41,12 @@ async fn moves_due_file_to_group_and_records() {
 
     std::fs::write(&cfg.classifier.lexicon_path, "二次函数\t数学\n").unwrap();
 
+    // 模拟「10 天前创建」：文件刚创建，固定时钟拨快 10 天。
+    let clock: Arc<dyn Clock> = Arc::new(common::clock_days_from_now(10));
     let src = desktop.join("二次函数课件.pptx");
     std::fs::write(&src, b"fake").unwrap();
-    common::set_mtime(&src, SystemTime::now() - Duration::from_secs(10 * 86400));
 
-    let report = build(&cfg, &desktop).run_once(&cfg).await.unwrap();
+    let report = build(&cfg, &desktop, clock).run_once(&cfg).await.unwrap();
 
     assert_eq!(report.moved, 1);
     assert_eq!(report.failed, 0);
@@ -75,11 +74,12 @@ async fn skips_too_recent_file() {
     cfg.notify.enabled = false;
     std::fs::write(&cfg.classifier.lexicon_path, "二次函数\t数学\n").unwrap();
 
+    // 文件刚创建：创建时间 ≈ 现在，距 30 天阈值还远。
+    let clock: Arc<dyn Clock> = Arc::new(common::FixedClock(chrono::Utc::now()));
     let src = desktop.join("二次函数课件.pptx");
     std::fs::write(&src, b"fake").unwrap();
-    common::set_mtime(&src, SystemTime::now() - Duration::from_secs(86400)); // 1 天
 
-    let report = build(&cfg, &desktop).run_once(&cfg).await.unwrap();
+    let report = build(&cfg, &desktop, clock).run_once(&cfg).await.unwrap();
 
     assert_eq!(report.skipped, 1);
     assert_eq!(report.moved, 0);

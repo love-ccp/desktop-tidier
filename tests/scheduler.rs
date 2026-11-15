@@ -3,7 +3,6 @@
 mod common;
 
 use std::sync::Arc;
-use std::time::{Duration, SystemTime};
 
 use desktop_tidier::config::ConfigStore;
 use desktop_tidier::platform::PlatformAdapter;
@@ -31,7 +30,8 @@ fn setup(
     std::fs::create_dir_all(&desktop).unwrap();
 
     let config_store = Arc::new(ConfigStore::load(&dir.join("config.json")).unwrap());
-    let clock: Arc<dyn Clock> = Arc::new(common::FixedClock(chrono::Utc::now()));
+    // 固定时钟拨快 10 天：文件创建时间 ≈ 现在，等效于「文件已存在 10 天」。
+    let clock: Arc<dyn Clock> = Arc::new(common::clock_days_from_now(10));
     (config_store, clock, desktop)
 }
 
@@ -49,11 +49,11 @@ fn build_scheduler(
     Scheduler::new(config_store, platform, clock, timesync, state).unwrap()
 }
 
-/// 在桌面放一个「10 天前修改」的课件文件（满足 min_age_days=3）。
+/// 在桌面放一个刚创建的课件文件；配合拨快 10 天的固定时钟模拟「10 天前创建」
+/// （满足默认 min_age_days=7）。
 fn put_course_file(desktop: &std::path::Path) {
     let src = desktop.join("二次函数课件.pptx");
     std::fs::write(&src, b"course data").unwrap();
-    common::set_mtime(&src, SystemTime::now() - Duration::from_secs(10 * 86400));
 }
 
 #[tokio::test]
@@ -121,7 +121,8 @@ async fn archive_skipped_when_below_min_new_files() {
     let desktop = dir.join("Desktop");
     std::fs::create_dir_all(&desktop).unwrap();
     let config_store = Arc::new(ConfigStore::load(&dir.join("config.json")).unwrap());
-    let clock: Arc<dyn Clock> = Arc::new(common::FixedClock(chrono::Utc::now()));
+    // 固定时钟拨快 10 天：文件创建时间 ≈ 现在，等效于「文件已存在 10 天」。
+    let clock: Arc<dyn Clock> = Arc::new(common::clock_days_from_now(10));
 
     put_course_file(&desktop);
     let scheduler = build_scheduler(&dir, config_store.clone(), clock, desktop.clone());

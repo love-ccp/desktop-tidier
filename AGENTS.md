@@ -91,7 +91,7 @@ pub trait PlatformAdapter: Send + Sync {
     fn notify(&self, title: &str, body: &str) -> Result<()>;
     fn desktop_dir(&self) -> Option<PathBuf>;
     fn default_config_dir(&self) -> PathBuf;
-    fn mtime(&self, path: &Path) -> Result<std::time::SystemTime>;
+    fn created(&self, path: &Path) -> Result<std::time::SystemTime>;  // 创建时间（Windows 创建时间；Linux 无 btime 时回退 mtime）
     fn set_autostart(&self, enabled: bool) -> Result<bool>;   // 开机自启（注册表 Run / autostart .desktop）
     fn is_autostart_enabled(&self) -> Result<bool>;           // 读当前自启状态（菜单勾选态）
     fn open_in_file_manager(&self, path: &Path) -> Result<()>; // 打开配置目录（explorer / xdg-open）
@@ -152,7 +152,7 @@ impl tracing_subscriber::fmt::MakeWriter for SingleFileMakeWriter { /* 见 §8 *
 |---|---|---|---|
 | `watcher.source_dir` | string | "" | 源目录（桌面）；空 = 自动探测桌面 |
 | `watcher.extensions` | string[] | 见示例 | 特定后缀（不带点，小写） |
-| `watcher.min_age_days` | uint | 3 | 修改时间超过 N 天（已锁定 mtime） |
+| `watcher.min_age_days` | uint | 7 | 创建时间距今超过 N 天（默认 7；无创建时间时回退修改时间；拷贝/下载文件以「到电脑上」的时间为准） |
 | `watcher.debounce_ms` | uint | 400 | 事件防抖 |
 | `watcher.scan_interval_secs` | uint | 172800 | 扫描整理频率（秒），默认两天一次；按「至多每隔 N」宽松执行（启动时超期即追赶） |
 | `storage.inbox_dir` | string | storage/待分类 | 步骤1移动目标（指定目录） |

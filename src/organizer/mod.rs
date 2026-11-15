@@ -171,11 +171,11 @@ impl Organizer {
         }
     }
 
-    /// mtime 距今是否超过 `min_age_days` 天。
+    /// 创建时间距今是否超过 `min_age_days` 天（拷贝/下载来的文件以拷入时间为准）。
     fn is_due(&self, path: &Path, cfg: &Config) -> Result<bool> {
-        let mtime = self.platform.mtime(path)?;
-        let mtime_dt: chrono::DateTime<chrono::Utc> = mtime.into();
-        let age = self.clock.now() - mtime_dt;
+        let created = self.platform.created(path)?;
+        let created_dt: chrono::DateTime<chrono::Utc> = created.into();
+        let age = self.clock.now() - created_dt;
         Ok(age.num_days() >= cfg.watcher.min_age_days as i64)
     }
 

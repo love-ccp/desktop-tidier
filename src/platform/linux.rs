@@ -1,5 +1,5 @@
 //! Linux 平台实现（M3）：单实例 flock、回收站、通知、桌面/配置目录、
-//! mtime、XDG autostart、xdg-open。
+//! 创建时间（btime 回退 mtime）、XDG autostart、xdg-open。
 
 use std::fs::{File, OpenOptions};
 use std::os::fd::AsRawFd;
@@ -82,8 +82,13 @@ impl PlatformAdapter for LinuxPlatform {
         config_home().join("desktop-tidier")
     }
 
-    fn mtime(&self, path: &Path) -> Result<SystemTime> {
-        Ok(std::fs::metadata(path)?.modified()?)
+    fn created(&self, path: &Path) -> Result<SystemTime> {
+        let meta = std::fs::metadata(path)?;
+        match meta.created() {
+            Ok(t) => Ok(t),
+            // 文件系统不支持创建时间（btime，如部分老内核/网络盘）时回退修改时间。
+            Err(_) => meta.modified().map_err(Into::into),
+        }
     }
 
     fn set_autostart(&self, enabled: bool) -> Result<bool> {

@@ -13,7 +13,7 @@ fn example_loads_with_correct_values() {
     let config = Config::load(&path).unwrap();
     let base = path.parent().unwrap().to_path_buf();
 
-    assert_eq!(config.watcher.min_age_days, 3);
+    assert_eq!(config.watcher.min_age_days, 7);
     assert_eq!(config.watcher.debounce_ms, 400);
     assert_eq!(config.watcher.scan_interval_secs, 172_800);
     assert_eq!(config.watcher.source_dir, "");
@@ -98,5 +98,5 @@ fn schema_hint_key_is_accepted() {
     std::fs::write(&path, serde_json::to_string_pretty(&value).unwrap()).unwrap();
 
     let config = Config::load(&path).unwrap();
-    assert_eq!(config.watcher.min_age_days, 3);
+    assert_eq!(config.watcher.min_age_days, 7);
 }

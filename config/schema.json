@@ -19,7 +19,7 @@
           "items": { "type": "string", "pattern": "^[a-z0-9]+$" },
           "description": "特定后缀（不带点、小写）"
         },
-        "min_age_days": { "type": "integer", "minimum": 0, "maximum": 36500, "description": "修改时间超过 N 天" },
+        "min_age_days": { "type": "integer", "minimum": 0, "maximum": 36500, "description": "创建时间距今超过 N 天（默认 7；无创建时间时回退修改时间）" },
         "debounce_ms": { "type": "integer", "minimum": 0, "maximum": 600000, "description": "文件事件防抖毫秒" },
         "scan_interval_secs": { "type": "integer", "minimum": 60, "maximum": 2592000, "description": "扫描整理频率（秒），默认 172800（两天一次）" }
       }

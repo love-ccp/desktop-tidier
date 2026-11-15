@@ -40,7 +40,7 @@ pub struct Watcher {
     pub source_dir: String,
     /// 需要处理的后缀（不带点、小写）。
     pub extensions: Vec<String>,
-    /// 修改时间超过 N 天（mtime）。
+    /// 创建时间距今超过 N 天（默认 7；无创建时间时回退修改时间）。
     pub min_age_days: u32,
     /// 文件事件防抖（毫秒）。
     pub debounce_ms: u64,

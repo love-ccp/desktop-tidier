@@ -3,7 +3,7 @@
   "watcher": {
     "source_dir": "",
     "extensions": ["enbx", "pptx", "ppt", "doc", "docx", "pdf", "wps", "et", "dps", "zip"],
-    "min_age_days": 3,
+    "min_age_days": 7,
     "debounce_ms": 400,
     "scan_interval_secs": 172800
   },

@@ -25,8 +25,8 @@ pub trait PlatformAdapter: Send + Sync {
     fn desktop_dir(&self) -> Option<PathBuf>;
     /// 默认配置目录（业务层配置不存在时在此生成）。
     fn default_config_dir(&self) -> PathBuf;
-    /// 文件最后修改时间（mtime）。
-    fn mtime(&self, path: &Path) -> Result<std::time::SystemTime>;
+    /// 文件创建时间（Windows 为创建时间；Linux 优先 btime，文件系统不支持时回退 mtime）。
+    fn created(&self, path: &Path) -> Result<std::time::SystemTime>;
     /// 设置开机自启；返回设置后的启用状态。
     fn set_autostart(&self, enabled: bool) -> Result<bool>;
     /// 当前是否已启用开机自启（托盘菜单勾选态）。
