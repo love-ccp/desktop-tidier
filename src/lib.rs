@@ -12,7 +12,9 @@ pub mod indexer;
 pub mod logger;
 pub mod organizer;
 pub mod platform;
+pub mod scheduler;
 pub mod timesync;
+pub mod watcher;
 
 pub use error::{Error, Result};
 

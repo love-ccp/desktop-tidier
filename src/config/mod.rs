@@ -192,6 +192,11 @@ impl ConfigStore {
         self.inner.load_full()
     }
 
+    /// 配置文件路径（供文件监听定位）。
+    pub fn path(&self) -> &Path {
+        &self.path
+    }
+
     /// 重新加载；成功返回 [`ReloadOutcome::Reloaded`] 并原子替换，
     /// 失败返回 [`ReloadOutcome::Rejected`] 且保留旧值。
     pub fn reload(&self) -> Result<ReloadOutcome> {
