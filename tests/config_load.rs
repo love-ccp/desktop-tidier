@@ -61,6 +61,20 @@ fn missing_file_generates_example() {
 }
 
 #[test]
+fn first_run_seeds_support_files() {
+    let dir = common::TempDir::new();
+    Config::load(&dir.join("config.json")).unwrap();
+
+    // schema.json 平铺（供 `$schema: "./schema.json"` 编辑器提示定位）。
+    assert!(dir.join("schema.json").exists());
+    // 其余支持文件在 config/ 子目录（对应 lexicon_path: "config/lexicon.txt"）。
+    assert!(dir.join("config/lexicon.txt").exists());
+    assert!(dir.join("config/schema.json").exists());
+    assert!(dir.join("config/config.example.json").exists());
+    assert!(dir.join("config/配置说明.md").exists());
+}
+
+#[test]
 fn resolve_paths_is_idempotent() {
     let dir = common::TempDir::new();
     let path = dir.join("config.json");
