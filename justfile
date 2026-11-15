@@ -20,6 +20,10 @@ test:
 build:
     cargo build --release
 
-# 打包占位（M11 产出 Windows 单文件 exe，M10 做 Linux 打包）
+# Windows 交叉编译（需先 rustup target add x86_64-pc-windows-msvc；正式交付走 CI）
+build-win:
+    cargo build --release --target x86_64-pc-windows-msvc
+
+# 打包占位（M11 产出 Windows 单文件 exe（CI），M10 做 Linux 打包）
 package:
-    @echo "package 为占位入口：M11 产出 Windows 单文件 exe（CI），M10 做 Linux 打包。"
+    @echo "package 为占位入口：M11 产出 Windows 单文件 exe（CI），M10 做 Linux 打包（见 packaging/）。"

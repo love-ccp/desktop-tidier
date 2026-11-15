@@ -19,7 +19,7 @@ jobs:
       - run: just test
 
   windows-build:
-    name: Windows (release build)
+    name: Windows (release build + artifact)
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,4 +28,10 @@ jobs:
           targets: x86_64-pc-windows-msvc
       # aws-lc-rs（reqwest rustls 后端）在 Windows 需要 nasm 汇编器
       - uses: ilammy/setup-nasm@v1
+      # 静态 CRT（.cargo/config.toml）产出单文件 exe
       - run: cargo build --release --target x86_64-pc-windows-msvc
+      - uses: actions/upload-artifact@v4
+        with:
+          name: course-organizer-windows-x64
+          path: target/x86_64-pc-windows-msvc/release/course-organizer.exe
+          if-no-files-found: error

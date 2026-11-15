@@ -1,0 +1,28 @@
+# Maintainer: course-organizer-dev <course-organizer-dev@localhost>
+# Arch Linux 打包（PKGBUILD）。构建产物：/usr/bin/course-organizer + 桌面入口。
+# 使用：makepkg -si（在仓库根目录，source 需替换为实际 tarball/git 源）。
+
+pkgname=course-organizer
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="希沃白板课件定期整理后台工具（单进程纯 Rust，无 GUI 窗口，托盘常驻）"
+arch=('x86_64')
+url=""
+license=('MIT')
+makedepends=('cargo')
+depends=('glibc' 'gcc-libs')
+# 正式发布时改为 tarball 或 git 源；此处示例直接使用当前目录。
+source=()
+sha256sums=()
+
+build() {
+  cargo build --release --locked
+}
+
+package() {
+  install -Dm755 target/release/course-organizer "$pkgdir/usr/bin/course-organizer"
+  install -Dm644 packaging/course-organizer.desktop \
+    "$pkgdir/usr/share/applications/course-organizer.desktop"
+  install -Dm644 packaging/course-organizer.service \
+    "$pkgdir/usr/lib/systemd/user/course-organizer.service"
+}

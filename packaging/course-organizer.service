@@ -1,0 +1,18 @@
+# 课件整理助手 —— systemd 用户服务（可选；与托盘自启二选一）
+# 安装：install -Dm644 course-organizer.service ~/.config/systemd/user/course-organizer.service
+# 启用：systemctl --user enable --now course-organizer.service
+# 说明：托盘程序依赖图形会话，故用 graphical-session.target 而非 default.target。
+
+[Unit]
+Description=课件整理助手（希沃白板课件后台整理托盘）
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/course-organizer
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=graphical-session.target
