@@ -3,6 +3,6 @@
 
 #[test]
 fn version_is_set() {
-    assert!(!course_organizer::VERSION.is_empty());
-    assert!(course_organizer::VERSION.starts_with("0."));
+    assert!(!desktop_tidier::VERSION.is_empty());
+    assert!(desktop_tidier::VERSION.starts_with("0."));
 }

@@ -2,7 +2,7 @@
 
 mod common;
 
-use course_organizer::config::{example_str, Config};
+use desktop_tidier::config::{example_str, Config};
 
 #[test]
 fn example_loads_with_correct_values() {
@@ -21,7 +21,10 @@ fn example_loads_with_correct_values() {
     assert!(config.watcher.extensions.contains(&"enbx".to_string()));
 
     assert_eq!(config.archiver.zip_level, 6);
-    assert_eq!(config.archiver.interval_hours, 24);
+    assert_eq!(config.archiver.interval_hours, 168);
+    assert_eq!(config.archiver.max_archives, 0);
+    assert_eq!(config.archiver.max_total_bytes, 0);
+    assert_eq!(config.archiver.min_new_files, 1);
     assert_eq!(config.logger.max_bytes, 1_048_576);
     assert_eq!(config.logger.level, "info");
     assert_eq!(config.concurrency.max_parallel_ops, 4);
@@ -36,15 +39,13 @@ fn example_loads_with_correct_values() {
     );
     assert_eq!(
         config.logger.file,
-        base.join("logs/organizer.log")
+        base.join("logs/desktop-tidier.log")
             .to_string_lossy()
             .into_owned()
     );
     assert_eq!(
         config.classifier.lexicon_path,
-        base.join("config/lexicon.txt")
-            .to_string_lossy()
-            .into_owned()
+        base.join("lexicon.txt").to_string_lossy().into_owned()
     );
 }
 
@@ -65,13 +66,14 @@ fn first_run_seeds_support_files() {
     let dir = common::TempDir::new();
     Config::load(&dir.join("config.json")).unwrap();
 
-    // schema.json 平铺（供 `$schema: "./schema.json"` 编辑器提示定位）。
+    // 扁平布局（无歧义）：config.json 是唯一生效配置，其余为参考/数据文件，全部平铺。
+    assert!(dir.join("config.json").exists());
     assert!(dir.join("schema.json").exists());
-    // 其余支持文件在 config/ 子目录（对应 lexicon_path: "config/lexicon.txt"）。
-    assert!(dir.join("config/lexicon.txt").exists());
-    assert!(dir.join("config/schema.json").exists());
-    assert!(dir.join("config/config.example.json").exists());
-    assert!(dir.join("config/配置说明.md").exists());
+    assert!(dir.join("config.example.json").exists());
+    assert!(dir.join("lexicon.txt").exists());
+    assert!(dir.join("配置说明.md").exists());
+    // 不再生成容易与生效配置混淆的 config/ 子目录。
+    assert!(!dir.join("config/lexicon.txt").exists());
 }
 
 #[test]
@@ -92,7 +94,7 @@ fn schema_hint_key_is_accepted() {
     let dir = common::TempDir::new();
     let path = dir.join("config.json");
     let mut value: serde_json::Value = serde_json::from_str(example_str()).unwrap();
-    value["$schema"] = serde_json::json!("https://example.local/course-organizer/schema.json");
+    value["$schema"] = serde_json::json!("https://example.local/desktop-tidier/schema.json");
     std::fs::write(&path, serde_json::to_string_pretty(&value).unwrap()).unwrap();
 
     let config = Config::load(&path).unwrap();

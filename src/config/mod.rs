@@ -75,6 +75,12 @@ pub struct Archiver {
     pub interval_hours: u32,
     pub zip_level: u32,
     pub rename_pattern: String,
+    /// 归档 zip 最大保留数量；0 = 不限制，超出时最旧的移入回收站。
+    pub max_archives: u32,
+    /// 归档 zip 最大总占用字节；0 = 不限制，超出时最旧的移入回收站。
+    pub max_total_bytes: u64,
+    /// 归档前按台账比对的新增文件数下限；低于该值跳过本次归档；0 = 不限制。
+    pub min_new_files: u32,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

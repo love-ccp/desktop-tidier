@@ -21,9 +21,9 @@ use crate::{Error, Result};
 
 use super::{PlatformAdapter, SingleInstanceGuard};
 
-const MUTEX_NAME: &str = "course-organizer-single-instance";
+const MUTEX_NAME: &str = "desktop-tidier-single-instance";
 const RUN_KEY: &str = r"Software\Microsoft\Windows\CurrentVersion\Run";
-const RUN_VALUE: &str = "course-organizer";
+const RUN_VALUE: &str = "desktop-tidier";
 
 /// 单实例锁：持有命名互斥体句柄；Drop 时 CloseHandle 释放。
 pub(crate) struct LockGuard(HANDLE);
@@ -64,7 +64,7 @@ impl PlatformAdapter for WindowsPlatform {
 
     fn notify(&self, title: &str, body: &str) -> Result<()> {
         notify_rust::Notification::new()
-            .appname("course-organizer")
+            .appname("desktop-tidier")
             .summary(title)
             .body(body)
             .show()
@@ -79,7 +79,7 @@ impl PlatformAdapter for WindowsPlatform {
     fn default_config_dir(&self) -> PathBuf {
         dirs::config_dir()
             .unwrap_or_default()
-            .join("course-organizer")
+            .join("desktop-tidier")
     }
 
     fn mtime(&self, path: &Path) -> Result<SystemTime> {

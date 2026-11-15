@@ -1,5 +1,7 @@
 //! 归档器（M7）：把 course_dir/** 压缩为 zip（等级 6）到 archive_dir，
-//! 成功后按 `recycle_after_archive` 将 course_dir 内文件清空至回收站。
+//! 成功后按 `recycle_after_archive` 将 course_dir 内文件清空至回收站；
+//! 并按 `archiver.max_archives` / `archiver.max_total_bytes` 管理归档总量
+//! （超限时最旧的 zip 移入回收站，0 = 不限制）。
 
 use std::fs::File;
 use std::io::Write;
@@ -18,6 +20,8 @@ pub struct ArchiveReport {
     pub archived: usize,
     pub zipped_to: PathBuf,
     pub recycled: usize,
+    /// 因超出 `max_archives`/`max_total_bytes` 上限被移入回收站的旧归档数。
+    pub purged: usize,
 }
 
 /// 归档器（deps 注入）。
@@ -54,6 +58,7 @@ impl Archiver {
             archived: 0,
             zipped_to: target.clone(),
             recycled: 0,
+            purged: 0,
         };
 
         if files.is_empty() {
@@ -71,6 +76,7 @@ impl Archiver {
         if cfg.storage.recycle_after_archive {
             report.recycled = self.recycle(&files)?;
         }
+        report.purged = self.enforce_limits(cfg, &archive, &target);
         Ok(report)
     }
 
@@ -123,6 +129,70 @@ impl Archiver {
             .map_err(|e| Error::Msg(format!("清空 course_dir 至回收站失败：{e}")))?;
         Ok(files.len())
     }
+
+    /// 归档上限管理：仅统计 `archive_dir` 顶层的 `*.zip`；超出
+    /// `max_archives`（数量）或 `max_total_bytes`（总字节）时，从最旧开始把多余的
+    /// zip 移入回收站（0 = 不限制）。绝不删除本次刚生成的 `target`。
+    fn enforce_limits(&self, cfg: &Config, archive: &Path, target: &Path) -> usize {
+        if cfg.archiver.max_archives == 0 && cfg.archiver.max_total_bytes == 0 {
+            return 0;
+        }
+        let mut zips = match list_archive_zips(archive) {
+            Ok(z) => z,
+            Err(e) => {
+                tracing::warn!("扫描归档目录失败（跳过上限管理）：{e}");
+                return 0;
+            }
+        };
+        // 默认命名以日期开头，字典序即时间序，最新的在末尾。
+        zips.sort();
+
+        let mut purged = 0usize;
+        loop {
+            let count = zips.len() as u32;
+            let total: u64 = zips
+                .iter()
+                .filter_map(|p| std::fs::metadata(p).ok().map(|m| m.len()))
+                .sum();
+            let over_count = cfg.archiver.max_archives > 0 && count > cfg.archiver.max_archives;
+            let over_size =
+                cfg.archiver.max_total_bytes > 0 && total > cfg.archiver.max_total_bytes;
+            if !over_count && !over_size {
+                break;
+            }
+            // 从最旧（且不是本次产物）的开始清理。
+            let Some(idx) = zips.iter().position(|p| p != target) else {
+                break; // 只剩本次产物本身：即使仍超限也不再删除（保护数据）。
+            };
+            let victim = zips.remove(idx);
+            match self.platform.trash(std::slice::from_ref(&victim)) {
+                Ok(()) => {
+                    purged += 1;
+                    tracing::info!("归档超出上限，已将 {victim:?} 移入回收站");
+                }
+                Err(e) => {
+                    tracing::warn!("移入回收站失败（停止上限管理）：{e}");
+                    break;
+                }
+            }
+        }
+        purged
+    }
+}
+
+/// 列出 `archive` 顶层的 `*.zip` 文件。
+fn list_archive_zips(archive: &Path) -> Result<Vec<PathBuf>> {
+    let mut out = Vec::new();
+    for entry in std::fs::read_dir(archive)? {
+        let entry = entry?;
+        let path = entry.path();
+        let is_file = entry.file_type().map(|t| t.is_file()).unwrap_or(false);
+        let is_zip = path.extension().and_then(|e| e.to_str()) == Some("zip");
+        if is_file && is_zip {
+            out.push(path);
+        }
+    }
+    Ok(out)
 }
 
 /// 递归收集目录下所有文件。

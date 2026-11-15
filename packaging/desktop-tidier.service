@@ -1,6 +1,6 @@
 # 课件整理助手 —— systemd 用户服务（可选；与托盘自启二选一）
-# 安装：install -Dm644 course-organizer.service ~/.config/systemd/user/course-organizer.service
-# 启用：systemctl --user enable --now course-organizer.service
+# 安装：install -Dm644 desktop-tidier.service ~/.config/systemd/user/desktop-tidier.service
+# 启用：systemctl --user enable --now desktop-tidier.service
 # 说明：托盘程序依赖图形会话，故用 graphical-session.target 而非 default.target。
 
 [Unit]
@@ -10,7 +10,7 @@ PartOf=graphical-session.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/course-organizer
+ExecStart=/usr/bin/desktop-tidier
 Restart=on-failure
 RestartSec=5
 

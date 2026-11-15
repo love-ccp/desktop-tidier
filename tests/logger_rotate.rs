@@ -2,12 +2,12 @@
 
 mod common;
 
-use course_organizer::logger::SingleFileMakeWriter;
+use desktop_tidier::logger::SingleFileMakeWriter;
 
 #[test]
 fn rotates_keeping_single_bak() {
     let dir = common::TempDir::new();
-    let log = dir.join("organizer.log");
+    let log = dir.join("desktop-tidier.log");
 
     let writer = SingleFileMakeWriter::new(&log, 512);
     let subscriber = tracing_subscriber::fmt()
@@ -22,7 +22,7 @@ fn rotates_keeping_single_bak() {
         }
     });
 
-    let bak = dir.join("organizer.log.bak");
+    let bak = dir.join("desktop-tidier.log.bak");
     assert!(log.exists(), "日志文件应存在");
     assert!(bak.exists(), "应存在 1 个 .bak");
 
@@ -44,7 +44,7 @@ fn rotates_keeping_single_bak() {
 #[test]
 fn writes_events_to_file() {
     let dir = common::TempDir::new();
-    let log = dir.join("organizer.log");
+    let log = dir.join("desktop-tidier.log");
 
     let writer = SingleFileMakeWriter::new(&log, 1024 * 1024);
     let subscriber = tracing_subscriber::fmt()

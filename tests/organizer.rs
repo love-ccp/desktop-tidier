@@ -6,13 +6,13 @@ use std::path::Path;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 
-use course_organizer::classifier::Classifier;
-use course_organizer::indexer::Indexer;
-use course_organizer::organizer::Organizer;
-use course_organizer::platform::PlatformAdapter;
-use course_organizer::timesync::Clock;
+use desktop_tidier::classifier::Classifier;
+use desktop_tidier::indexer::Indexer;
+use desktop_tidier::organizer::Organizer;
+use desktop_tidier::platform::PlatformAdapter;
+use desktop_tidier::timesync::Clock;
 
-fn build(cfg: &course_organizer::config::Config, desktop: &Path) -> Organizer {
+fn build(cfg: &desktop_tidier::config::Config, desktop: &Path) -> Organizer {
     let classifier = Arc::new(
         Classifier::load(Path::new(&cfg.classifier.lexicon_path), "utf-8")
             .expect("classifier load"),

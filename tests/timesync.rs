@@ -2,7 +2,7 @@
 
 use chrono::{Datelike, Timelike, Utc};
 
-use course_organizer::timesync::{parse_http_date, Clock, SyncedClock, Timesync};
+use desktop_tidier::timesync::{parse_http_date, Clock, SyncedClock, Timesync};
 
 #[test]
 fn parses_rfc2822_date_header() {

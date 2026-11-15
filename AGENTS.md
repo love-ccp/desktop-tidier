@@ -1,4 +1,4 @@
-# course-organizer 总规格（AGENTS.md）
+# desktop-tidier 总规格（AGENTS.md）
 
 > 每个 agent 会话开始都必须完整读取本文件与 `config/schema.json`、`config/配置说明.md`。
 > 本文件是防漂移核心；违反硬性约束的输出一律打回。
@@ -11,7 +11,7 @@
 - 托盘图标：**刷子样式**（Windows 用 `.ico`，Linux 用 PNG/SVG，资源放 `assets/`）。
 - 右键菜单固定 4 项，自上而下依次：`设置开机自启`、`立刻整理`、`打开配置文件目录`、`退出`。
 - `设置开机自启`：勾选态切换，调 `PlatformAdapter::set_autostart`（Windows 写注册表 Run 键 / Linux 写 `~/.config/autostart/*.desktop`）。
-- `立刻整理`：立即触发一次完整整理（扫描 → 分类 → 移动 → 归档 → 记账），不等 `scan_interval_secs`。
+- `立刻整理`：立即触发一次整理（扫描 → 分类 → 移动 → 记账），不等 `scan_interval_secs`；**不触发归档**（归档只按 `archiver.interval_hours` 独立周期执行）。
 - `打开配置文件目录`：调 `PlatformAdapter::open_in_file_manager` 打开配置目录（explorer / xdg-open）。
 - 无"重载配置/暂停"菜单项：配置与词库的重载走文件监听自动完成。
 
@@ -51,7 +51,7 @@ tokio worker：scheduler / watcher / organizer / archiver / indexer / timesync
 ## 4. 仓库结构
 
 ```
-course-organizer/
+desktop-tidier/
 ├─ Cargo.toml            # 单 crate，lib + bin 分离（lib 可测，bin 薄）
 ├─ Cargo.lock            # 必须提交
 ├─ justfile              # lint/test/build/package 统一入口
@@ -129,7 +129,7 @@ pub struct Organizer { /* deps 注入 */ }
 impl Organizer { pub async fn run_once(&self, cfg: &Config) -> Result<OrganizeReport>; }
 
 // archiver/mod.rs
-pub struct ArchiveReport { pub archived: usize, pub zipped_to: PathBuf, pub recycled: usize }
+pub struct ArchiveReport { pub archived: usize, pub zipped_to: PathBuf, pub recycled: usize, pub purged: usize }
 pub struct Archiver { /* deps 注入 */ }
 impl Archiver { pub async fn run_once(&self, cfg: &Config) -> Result<ArchiveReport>; }
 
@@ -154,21 +154,24 @@ impl tracing_subscriber::fmt::MakeWriter for SingleFileMakeWriter { /* 见 §8 *
 | `watcher.extensions` | string[] | 见示例 | 特定后缀（不带点，小写） |
 | `watcher.min_age_days` | uint | 3 | 修改时间超过 N 天（已锁定 mtime） |
 | `watcher.debounce_ms` | uint | 400 | 事件防抖 |
-| `watcher.scan_interval_secs` | uint | 172800 | 扫描整理频率（秒），默认两天一次 |
+| `watcher.scan_interval_secs` | uint | 172800 | 扫描整理频率（秒），默认两天一次；按「至多每隔 N」宽松执行（启动时超期即追赶） |
 | `storage.inbox_dir` | string | storage/待分类 | 步骤1移动目标（指定目录） |
 | `storage.course_dir` | string | storage/课件库 | 步骤2分组根，文件进 `course_dir/{group}/` |
 | `storage.archive_dir` | string | storage/归档 | 步骤3归档目标 |
 | `storage.recycle_after_archive` | bool | true | 归档成功后清空 course_dir 至回收站 |
-| `classifier.lexicon_path` | string | config/lexicon.txt | 词库路径 |
+| `classifier.lexicon_path` | string | lexicon.txt | 词库路径（与 config.json 同目录，扁平布局） |
 | `classifier.lexicon_encoding` | string | auto | auto/utf-8/gbk |
 | `classifier.default_group` | string | 未分类 | 未命中关键词的分组 |
-| `archiver.interval_hours` | uint | 24 | 归档间隔 |
+| `archiver.interval_hours` | uint | 168 | 归档间隔（小时），默认一周；归档与整理完全解耦，只按本周期执行（启动时超期即追赶） |
 | `archiver.zip_level` | uint | 6 | 压缩等级（固定要求 6，仍可配） |
-| `archiver.rename_pattern` | string | {date}_{seq}_course.zip | 重命名规则，占位符见说明 |
+| `archiver.rename_pattern` | string | {date}_{seq}_desktop-tidier.zip | 重命名规则，占位符见说明 |
+| `archiver.max_archives` | uint | 0 | 归档 zip 最大保留数量；0 = 不限制，超出时最旧的移入回收站 |
+| `archiver.max_total_bytes` | uint | 0 | 归档 zip 最大总占用字节；0 = 不限制，超出时最旧的移入回收站 |
+| `archiver.min_new_files` | uint | 1 | 归档前按台账比对的新增文件数下限；低于该值跳过本次归档；0 = 不限制 |
 | `indexer.md_path` | string | storage/台账.md | 台账路径 |
 | `indexer.md_encoding` | string | auto | 读取现有编码再顺延 |
 | `indexer.entry_format` | string | 见示例 | 单条记录格式，占位符 {no}{filename}{group}{date} |
-| `logger.file` | string | logs/organizer.log | 日志文件（单文件） |
+| `logger.file` | string | logs/desktop-tidier.log | 日志文件（单文件） |
 | `logger.level` | string | info | trace/debug/info/warn/error |
 | `logger.max_bytes` | uint | 1048576 | 超过则截断为 1 个 .bak + 新文件 |
 | `timesync.enabled` | bool | true | 是否授时 |
@@ -178,6 +181,8 @@ impl tracing_subscriber::fmt::MakeWriter for SingleFileMakeWriter { /* 见 §8 *
 | `notify.enabled` | bool | true | 系统通知开关 |
 | `notify.app_name` | string | 课件整理助手 | 通知来源名 |
 | `concurrency.max_parallel_ops` | uint | 4 | 并发文件操作数 |
+
+> 运行状态文件 `storage/state.json`（上次整理/归档时间与台账水位）由程序自动维护，支撑「启动追赶」与「归档阈值比对」，用户不应手改。首次运行生成的配置目录为扁平布局：`config.json` 是唯一生效配置，`lexicon.txt` 是唯一生效词库，其余（schema.json / config.example.json / 配置说明.md）均为参考文件。
 
 **错误提示格式（已锁定）**：
 ```

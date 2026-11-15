@@ -4,7 +4,7 @@ mod common;
 
 use chrono::NaiveDate;
 
-use course_organizer::indexer::{Indexer, Record};
+use desktop_tidier::indexer::{Indexer, Record};
 
 fn record(no_expected: u64) -> Record {
     Record {

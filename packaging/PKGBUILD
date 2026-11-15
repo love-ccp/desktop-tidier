@@ -1,8 +1,8 @@
 # Maintainer: course-organizer-dev <course-organizer-dev@localhost>
-# Arch Linux 打包（PKGBUILD）。构建产物：/usr/bin/course-organizer + 桌面入口。
+# Arch Linux 打包（PKGBUILD）。构建产物：/usr/bin/desktop-tidier + 桌面入口。
 # 使用：makepkg -si（在仓库根目录，source 需替换为实际 tarball/git 源）。
 
-pkgname=course-organizer
+pkgname=desktop-tidier
 pkgver=0.1.0
 pkgrel=1
 pkgdesc="希沃白板课件定期整理后台工具（单进程纯 Rust，无 GUI 窗口，托盘常驻）"
@@ -20,9 +20,9 @@ build() {
 }
 
 package() {
-  install -Dm755 target/release/course-organizer "$pkgdir/usr/bin/course-organizer"
-  install -Dm644 packaging/course-organizer.desktop \
-    "$pkgdir/usr/share/applications/course-organizer.desktop"
-  install -Dm644 packaging/course-organizer.service \
-    "$pkgdir/usr/lib/systemd/user/course-organizer.service"
+  install -Dm755 target/release/desktop-tidier "$pkgdir/usr/bin/desktop-tidier"
+  install -Dm644 packaging/desktop-tidier.desktop \
+    "$pkgdir/usr/share/applications/desktop-tidier.desktop"
+  install -Dm644 packaging/desktop-tidier.service \
+    "$pkgdir/usr/lib/systemd/user/desktop-tidier.service"
 }

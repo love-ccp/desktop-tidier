@@ -1,17 +1,17 @@
 [package]
-name = "course-organizer"
+name = "desktop-tidier"
 version = "0.1.0"
 edition = "2021"
 description = "希沃白板课件定期整理后台工具（单进程纯 Rust，无 GUI 窗口）"
 license = "MIT"
-default-run = "course-organizer"
+default-run = "desktop-tidier"
 
 [lib]
-name = "course_organizer"
+name = "desktop_tidier"
 path = "src/lib.rs"
 
 [[bin]]
-name = "course-organizer"
+name = "desktop-tidier"
 path = "src/main.rs"
 
 [dependencies]

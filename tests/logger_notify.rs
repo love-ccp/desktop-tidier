@@ -4,16 +4,16 @@ mod common;
 
 use std::sync::Arc;
 
-use course_organizer::config::ConfigStore;
-use course_organizer::logger::NotifyLayer;
-use course_organizer::platform::PlatformAdapter;
+use desktop_tidier::config::ConfigStore;
+use desktop_tidier::logger::NotifyLayer;
+use desktop_tidier::platform::PlatformAdapter;
 use tracing_subscriber::layer::SubscriberExt;
 
 #[test]
 fn error_log_notifies_when_enabled() {
     let dir = common::TempDir::new();
     let cfg_path = dir.join("config.json");
-    course_organizer::config::Config::write_example(&cfg_path).unwrap();
+    desktop_tidier::config::Config::write_example(&cfg_path).unwrap();
     let config_store = Arc::new(ConfigStore::load(&cfg_path).unwrap());
 
     let fake = Arc::new(common::FakePlatform::new(dir.join("Desktop")));
@@ -35,7 +35,7 @@ fn error_log_notifies_when_enabled() {
 fn info_log_does_not_notify() {
     let dir = common::TempDir::new();
     let cfg_path = dir.join("config.json");
-    course_organizer::config::Config::write_example(&cfg_path).unwrap();
+    desktop_tidier::config::Config::write_example(&cfg_path).unwrap();
     let config_store = Arc::new(ConfigStore::load(&cfg_path).unwrap());
 
     let fake = Arc::new(common::FakePlatform::new(dir.join("Desktop")));

@@ -1,6 +1,6 @@
 //! M5 分类器测试：关键词命中、大小写、重复、格式错误行。
 
-use course_organizer::classifier::Classifier;
+use desktop_tidier::classifier::Classifier;
 
 #[test]
 fn classifies_by_keyword() {

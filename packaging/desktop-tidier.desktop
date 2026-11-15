@@ -1,11 +1,11 @@
 [Desktop Entry]
 Type=Application
 Name=课件整理助手
-Name[en]=Course Organizer
+Name[en]=Desktop Tidier
 Comment=希沃白板课件定期整理后台工具（托盘）
 Comment[en]=Tray tool that periodically organizes Seewo course files
-Exec=course-organizer
-Icon=course-organizer
+Exec=desktop-tidier
+Icon=desktop-tidier
 Terminal=false
 Categories=Utility;FileTools;
 X-GNOME-Autostart-enabled=false

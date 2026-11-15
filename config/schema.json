@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://example.local/course-organizer/schema.json",
-  "title": "course-organizer 配置",
+  "$id": "https://example.local/desktop-tidier/schema.json",
+  "title": "desktop-tidier 配置",
   "type": "object",
   "additionalProperties": false,
   "required": ["watcher", "storage", "classifier", "archiver", "indexer", "logger", "timesync", "notify", "concurrency"],
@@ -48,11 +48,14 @@
     "archiver": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["interval_hours", "zip_level", "rename_pattern"],
+      "required": ["interval_hours", "zip_level", "rename_pattern", "max_archives", "max_total_bytes", "min_new_files"],
       "properties": {
-        "interval_hours": { "type": "integer", "minimum": 1, "maximum": 720, "description": "归档间隔（小时）" },
+        "interval_hours": { "type": "integer", "minimum": 1, "maximum": 8760, "description": "归档间隔（小时），默认 168（一周）；归档与整理解耦，只按本周期执行" },
         "zip_level": { "type": "integer", "minimum": 1, "maximum": 9, "description": "zip 压缩等级，要求 6" },
-        "rename_pattern": { "type": "string", "description": "重命名规则，占位符 {date}/{time}/{seq}" }
+        "rename_pattern": { "type": "string", "description": "重命名规则，占位符 {date}/{time}/{seq}" },
+        "max_archives": { "type": "integer", "minimum": 0, "maximum": 100000, "description": "归档 zip 最大保留数量；0 = 不限制，超出时最旧的移入回收站" },
+        "max_total_bytes": { "type": "integer", "minimum": 0, "maximum": 10995116277760, "description": "归档 zip 最大总占用字节；0 = 不限制，超出时最旧的移入回收站" },
+        "min_new_files": { "type": "integer", "minimum": 0, "maximum": 1000000, "description": "归档前按台账比对的新增文件数下限；低于该值跳过本次归档；0 = 不限制" }
       }
     },
     "indexer": {

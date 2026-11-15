@@ -13,21 +13,17 @@ const EXAMPLE_STR: &str = include_str!("../../config/config.example.json");
 const LEXICON_STR: &str = include_str!("../../config/lexicon.txt");
 const DOC_STR: &str = include_str!("../../config/配置说明.md");
 
-/// 首次运行时把 schema / 示例 / 词库 / 说明写入配置目录（不覆盖已有文件）。
+/// 首次运行时把 schema / 示例 / 词库 / 说明平铺写入配置目录（不覆盖已有文件）。
 ///
-/// 布局：`schema.json` 平铺在配置根目录（对应示例 `"$schema": "./schema.json"` 编辑器提示），
-/// 其余文件放在 `config/` 子目录（对应 `lexicon_path: "config/lexicon.txt"` 与仓库布局）。
+/// 扁平布局（无歧义）：`config.json` 是**唯一生效**的配置文件（由 `Config::load` 写入）；
+/// 其余均为参考/数据文件：`schema.json`（编辑器提示，对应 `"$schema": "./schema.json"`）、
+/// `config.example.json`（参考示例）、`lexicon.txt`（词库数据）、`配置说明.md`（本文档）。
 pub fn seed_support_files(config_dir: &std::path::Path) -> crate::Result<()> {
     std::fs::create_dir_all(config_dir)?;
-    // 供 config.json 的 `$schema` 编辑器提示定位（相对 config.json 所在目录）。
     write_if_missing(&config_dir.join("schema.json"), SCHEMA_STR)?;
-
-    let dir = config_dir.join("config");
-    std::fs::create_dir_all(&dir)?;
-    write_if_missing(&dir.join("schema.json"), SCHEMA_STR)?;
-    write_if_missing(&dir.join("config.example.json"), EXAMPLE_STR)?;
-    write_if_missing(&dir.join("lexicon.txt"), LEXICON_STR)?;
-    write_if_missing(&dir.join("配置说明.md"), DOC_STR)?;
+    write_if_missing(&config_dir.join("config.example.json"), EXAMPLE_STR)?;
+    write_if_missing(&config_dir.join("lexicon.txt"), LEXICON_STR)?;
+    write_if_missing(&config_dir.join("配置说明.md"), DOC_STR)?;
     Ok(())
 }
 

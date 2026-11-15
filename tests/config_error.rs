@@ -2,7 +2,7 @@
 
 mod common;
 
-use course_organizer::config::{example_str, Config, ConfigStore, ReloadOutcome};
+use desktop_tidier::config::{example_str, Config, ConfigStore, ReloadOutcome};
 
 /// 读内置示例为 Value，逐字段破坏后写回 `config.json`，返回临时目录。
 fn write_bad(mut mutate: impl FnMut(&mut serde_json::Value)) -> common::TempDir {

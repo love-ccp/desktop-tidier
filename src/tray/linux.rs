@@ -16,7 +16,7 @@ pub struct SniTray {
 
 impl ksni::Tray for SniTray {
     fn id(&self) -> String {
-        "course-organizer".into()
+        "desktop-tidier".into()
     }
 
     fn title(&self) -> String {

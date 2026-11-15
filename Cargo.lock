@@ -358,40 +358,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f8f80099a98041a3d1622845c271458a2d73e688351bf3cb999266764b81d48"
 
 [[package]]
-name = "course-organizer"
-version = "0.1.0"
-dependencies = [
- "aho-corasick",
- "anyhow",
- "arc-swap",
- "chardetng",
- "chrono",
- "dirs",
- "encoding_rs",
- "jsonschema",
- "jwalk",
- "ksni",
- "libc",
- "muda",
- "notify",
- "notify-debouncer-full",
- "notify-rust",
- "reqwest",
- "rustix",
- "serde",
- "serde_json",
- "tempfile",
- "thiserror 2.0.21",
- "tokio",
- "tracing",
- "tracing-subscriber",
- "trash",
- "tray-icon",
- "windows",
- "zip",
-]
-
-[[package]]
 name = "cpufeatures"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -476,6 +442,40 @@ name = "deranged"
 version = "0.5.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9e9de72ce2ad1f90dc62fa25f0f430ef85eb4b0d8fa0be4f30373bc40a21d28e"
+
+[[package]]
+name = "desktop-tidier"
+version = "0.1.0"
+dependencies = [
+ "aho-corasick",
+ "anyhow",
+ "arc-swap",
+ "chardetng",
+ "chrono",
+ "dirs",
+ "encoding_rs",
+ "jsonschema",
+ "jwalk",
+ "ksni",
+ "libc",
+ "muda",
+ "notify",
+ "notify-debouncer-full",
+ "notify-rust",
+ "reqwest",
+ "rustix",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.21",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "trash",
+ "tray-icon",
+ "windows",
+ "zip",
+]
 
 [[package]]
 name = "dirs"

@@ -34,6 +34,6 @@ jobs:
       - run: cargo build --release --target x86_64-pc-windows-msvc
       - uses: actions/upload-artifact@v4
         with:
-          name: course-organizer-windows-x64
-          path: target/x86_64-pc-windows-msvc/release/course-organizer.exe
+          name: desktop-tidier-windows-x64
+          path: target/x86_64-pc-windows-msvc/release/desktop-tidier.exe
           if-no-files-found: error

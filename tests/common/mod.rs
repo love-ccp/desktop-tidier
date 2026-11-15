@@ -7,9 +7,9 @@ use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use std::time::SystemTime;
 
-use course_organizer::platform::{PlatformAdapter, SingleInstanceGuard};
-use course_organizer::timesync::Clock;
-use course_organizer::{Error, Result};
+use desktop_tidier::platform::{PlatformAdapter, SingleInstanceGuard};
+use desktop_tidier::timesync::Clock;
+use desktop_tidier::{Error, Result};
 
 /// 自动清理的临时目录（封装 `tempfile::TempDir`）。
 pub struct TempDir(tempfile::TempDir);
@@ -113,10 +113,10 @@ impl PlatformAdapter for FakePlatform {
 }
 
 /// 在 `dir` 下生成示例配置并加载（路径已相对 `dir` 解析）。
-pub fn example_config(dir: &Path) -> course_organizer::config::Config {
+pub fn example_config(dir: &Path) -> desktop_tidier::config::Config {
     let path = dir.join("config.json");
-    course_organizer::config::Config::write_example(&path).expect("write example");
-    course_organizer::config::Config::load(&path).expect("load example")
+    desktop_tidier::config::Config::write_example(&path).expect("write example");
+    desktop_tidier::config::Config::load(&path).expect("load example")
 }
 
 /// 把文件 mtime 设为指定时间（用于「mtime 超过 N 天」测试）。

@@ -7,7 +7,7 @@
 ```
 角色：Rust 资深工程师。先完整读 AGENTS.md、config/schema.json、config/配置说明.md，遵守其中全部约束。
 
-任务：初始化 course-organizer 仓库骨架，不实现任何业务逻辑。
+任务：初始化 desktop-tidier 仓库骨架，不实现任何业务逻辑。
 
 要求：
 1. 创建单 crate（lib + bin 分离）：src/lib.rs、src/main.rs（main 只调 lib 的 run()）、src/error.rs。

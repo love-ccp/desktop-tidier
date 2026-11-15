@@ -34,7 +34,7 @@ impl LinuxPlatform {
     /// XDG autostart 的 `.desktop` 文件路径。
     fn autostart_path(&self) -> PathBuf {
         let base = config_home();
-        base.join("autostart").join("course-organizer.desktop")
+        base.join("autostart").join("desktop-tidier.desktop")
     }
 }
 
@@ -66,7 +66,7 @@ impl PlatformAdapter for LinuxPlatform {
 
     fn notify(&self, title: &str, body: &str) -> Result<()> {
         notify_rust::Notification::new()
-            .appname("course-organizer")
+            .appname("desktop-tidier")
             .summary(title)
             .body(body)
             .show()
@@ -79,7 +79,7 @@ impl PlatformAdapter for LinuxPlatform {
     }
 
     fn default_config_dir(&self) -> PathBuf {
-        config_home().join("course-organizer")
+        config_home().join("desktop-tidier")
     }
 
     fn mtime(&self, path: &Path) -> Result<SystemTime> {
