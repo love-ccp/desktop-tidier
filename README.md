@@ -1,49 +1,31 @@
 # desktop-tidier 课件整理助手
 
-单进程纯 Rust 的 Windows / Linux(KDE) 桌面课件定期整理后台工具，面向希沃白板长时间开机场景。
-**无 GUI 窗口**：仅一个刷子样式的系统托盘图标 + 右键菜单（Windows release 构建隐藏控制台窗口）。
+单进程纯 Windows / Linux(KDE) 桌面课件后台自动整理工具，面向教学场景，使您班级大屏的桌面保持整洁
+使用Deepseek Harness开发，代码全部由Deepseek编写，因此保留了大部分ai工程文件（绝对不是因为我懒得管）
+*注： linux 打包见 `packing/`*
 
-## 功能
+## 主要功能
 
-- 自动整理：扫描桌面（或指定目录）中超过 N 天的课件文件 → 按词库关键词分类 → 移动到课件库分组目录。
-- 定期归档：归档与整理**完全解耦**，只按 `archiver.interval_hours` 周期执行（默认 168h = 一周）；归档前按台账比对新增文件数（`archiver.min_new_files`），不足则跳过；归档 zip 可设**数量/总字节上限**（`max_archives` / `max_total_bytes`），超出时最旧的移入回收站（0 = 不限制）。
-- 宽松间隔：班级电脑并非全天开机，启动 15 秒后自动追赶——距上次整理/归档已超期就立即补做一次（状态存于 `storage/state.json`）。
-- MD 台账：每次收录按 `entry_format` 追加一条记录，编号顺延、编码顺延。
-- 托盘菜单（固定 4 项）：`设置开机自启` / `立刻整理` / `打开配置文件目录` / `退出`。
-- 配置与词库热重载（文件监听 + 防抖）；系统通知（可关闭）。
+- 自动整理：扫描桌面/指定目录中超过 N 天的文件，并按词库关键词分类移动至指定目录
+- 定期归档：归档按周期执行（默认一周），支持自动跳过变化太小的归档事件，支持自动清理老旧归档。
+- 宽松间隔：电脑开机启动 15 秒后自动追赶，距上次整理/归档超期则立刻补做一次。
+- 自动台账：记录收录文件
+- 配置与词库热重载
+- 可关闭的系统通知
 
-## 构建与验收
+### 配置文件目录（首次运行自动生成）
 
-```bash
-just fmt     # cargo fmt --check
-just lint    # cargo clippy --all-targets -- -D warnings
-just test    # cargo test
-just build   # cargo build --release（Linux 本机）
-```
-
-## 运行
-
-```bash
-cargo run --release
-# 或直接运行二进制：
-./target/release/desktop-tidier
-```
-
-Windows 双击 `desktop-tidier.exe` 即可（无窗口、无控制台，仅在托盘出现刷子图标）。
-
-### 配置目录（首次运行自动生成，扁平布局）
-
-Windows：`%APPDATA%\desktop-tidier\`；Linux：`~/.config/desktop-tidier\`
+Windows：`%APPDATA%\desktop-tidier\`
+Linux：`~/.config/desktop-tidier\`
 
 | 文件 | 作用 |
 |---|---|
-| `config.json` | **唯一生效配置**（改它） |
-| `lexicon.txt` | **唯一生效词库**（改它） |
+| `config.json` | **唯一生效配置** |
+| `lexicon.txt` | **唯一生效词库** |
 | `schema.json` / `config.example.json` / `配置说明.md` | 参考文件（改了不影响程序） |
 | `storage/` | 待分类 / 课件库 / 归档 / 台账 / `state.json` |
 | `logs/` | 日志 |
 
-## 打包
+## TODO LIST
 
-- **Linux**：见 `packaging/`（`PKGBUILD`、`desktop-tidier.desktop`、systemd 用户服务）。
-
+…………估计以后有时间了可能都不会回来看这个项目，这条只是写在这里占位置。
