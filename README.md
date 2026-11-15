@@ -46,17 +46,4 @@ Windows：`%APPDATA%\desktop-tidier\`；Linux：`~/.config/desktop-tidier\`
 ## 打包
 
 - **Linux**：见 `packaging/`（`PKGBUILD`、`desktop-tidier.desktop`、systemd 用户服务）。
-- **Windows 单文件 exe**：走 GitHub Actions（`.github/workflows/ci.yml`），静态 CRT 无 DLL 依赖、图标内嵌。
-  ```bash
-  git remote add origin <你的仓库> && git push -u origin main
-  # CI 产物：desktop-tidier-windows-x64 / desktop-tidier.exe
-  ```
-  本地交叉编译（可选）：`just build-win`（需 `rustup target add x86_64-pc-windows-msvc`）。
 
-## 目录
-
-- `src/`：config / platform / scheduler / watcher / organizer / classifier / archiver / indexer / state / timesync / logger / tray
-- `config/`：`schema.json`、`config.example.json`、`配置说明.md`、`lexicon.txt`
-- `tests/`：集成测试（tempfile 沙盒 + 固定时钟 + 假平台）
-- `packaging/`：Linux 打包 + 系统集成文件
-- `AGENTS.md`：总规格（防漂移核心，开发前必读）
