@@ -1,6 +1,6 @@
 # desktop-tidier 课件整理助手
 
-单进程纯 Windows / Linux(KDE) 桌面课件后台自动整理工具，面向教学场景，使您班级大屏的桌面保持整洁
+单进程 Windows / Linux(KDE) 桌面课件后台自动整理工具，面向教学场景，使您班级大屏的桌面保持整洁
 使用Deepseek Harness开发，代码全部由Deepseek编写，因此保留了大部分ai工程文件（绝对不是因为我懒得管）
 *注： linux 打包见 `packing/`*
 
