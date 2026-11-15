@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  linux:
+    name: Linux (fmt + lint + test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: extractions/setup-just@v2
+      - run: just fmt
+      - run: just lint
+      - run: just test
+
+  windows-build:
+    name: Windows (release build)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+      # aws-lc-rs（reqwest rustls 后端）在 Windows 需要 nasm 汇编器
+      - uses: ilammy/setup-nasm@v1
+      - run: cargo build --release --target x86_64-pc-windows-msvc

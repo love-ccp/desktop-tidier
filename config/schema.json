@@ -1,0 +1,111 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.local/course-organizer/schema.json",
+  "title": "course-organizer 配置",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["watcher", "storage", "classifier", "archiver", "indexer", "logger", "timesync", "notify", "concurrency"],
+  "properties": {
+    "watcher": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_dir", "extensions", "min_age_days", "debounce_ms", "scan_interval_secs"],
+      "properties": {
+        "source_dir": { "type": "string", "description": "源目录；空字符串 = 自动探测桌面" },
+        "extensions": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "pattern": "^[a-z0-9]+$" },
+          "description": "特定后缀（不带点、小写）"
+        },
+        "min_age_days": { "type": "integer", "minimum": 0, "maximum": 36500, "description": "修改时间超过 N 天" },
+        "debounce_ms": { "type": "integer", "minimum": 0, "maximum": 600000, "description": "文件事件防抖毫秒" },
+        "scan_interval_secs": { "type": "integer", "minimum": 60, "maximum": 2592000, "description": "扫描整理频率（秒），默认 172800（两天一次）" }
+      }
+    },
+    "storage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["inbox_dir", "course_dir", "archive_dir", "recycle_after_archive"],
+      "properties": {
+        "inbox_dir": { "type": "string", "description": "步骤1移动目标（指定目录）" },
+        "course_dir": { "type": "string", "description": "步骤2分组根，文件进 course_dir/{group}/" },
+        "archive_dir": { "type": "string", "description": "步骤3归档目标" },
+        "recycle_after_archive": { "type": "boolean", "description": "归档成功后清空 course_dir 至回收站" }
+      }
+    },
+    "classifier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lexicon_path", "lexicon_encoding", "default_group"],
+      "properties": {
+        "lexicon_path": { "type": "string", "description": "词库路径" },
+        "lexicon_encoding": { "type": "string", "enum": ["auto", "utf-8", "gbk"], "description": "词库编码" },
+        "default_group": { "type": "string", "description": "未命中关键词的分组名" }
+      }
+    },
+    "archiver": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["interval_hours", "zip_level", "rename_pattern"],
+      "properties": {
+        "interval_hours": { "type": "integer", "minimum": 1, "maximum": 720, "description": "归档间隔（小时）" },
+        "zip_level": { "type": "integer", "minimum": 1, "maximum": 9, "description": "zip 压缩等级，要求 6" },
+        "rename_pattern": { "type": "string", "description": "重命名规则，占位符 {date}/{time}/{seq}" }
+      }
+    },
+    "indexer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["md_path", "md_encoding", "entry_format"],
+      "properties": {
+        "md_path": { "type": "string", "description": "台账 MD 路径" },
+        "md_encoding": { "type": "string", "enum": ["auto", "utf-8", "gbk"], "description": "读取现有编码再顺延" },
+        "entry_format": { "type": "string", "description": "单条记录格式，占位符 {no}/{filename}/{group}/{date}" }
+      }
+    },
+    "logger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "level", "max_bytes"],
+      "properties": {
+        "file": { "type": "string", "description": "日志文件路径（单文件）" },
+        "level": { "type": "string", "enum": ["trace", "debug", "info", "warn", "error"], "description": "日志级别" },
+        "max_bytes": { "type": "integer", "minimum": 1024, "maximum": 1073741824, "description": "超过则截断为 1 个 .bak + 新文件" }
+      }
+    },
+    "timesync": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "servers", "interval_hours", "timeout_secs"],
+      "properties": {
+        "enabled": { "type": "boolean", "description": "是否启用授时" },
+        "servers": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "format": "uri", "pattern": "^https://" },
+          "description": "HTTPS 授时 URL，读响应 Date 头"
+        },
+        "interval_hours": { "type": "integer", "minimum": 1, "maximum": 168, "description": "启动时与每 N 小时储存" },
+        "timeout_secs": { "type": "integer", "minimum": 1, "maximum": 120, "description": "单次请求超时（秒）" }
+      }
+    },
+    "notify": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "app_name"],
+      "properties": {
+        "enabled": { "type": "boolean", "description": "系统通知开关" },
+        "app_name": { "type": "string", "description": "通知来源名" }
+      }
+    },
+    "concurrency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["max_parallel_ops"],
+      "properties": {
+        "max_parallel_ops": { "type": "integer", "minimum": 1, "maximum": 64, "description": "并发文件操作数" }
+      }
+    }
+  }
+}

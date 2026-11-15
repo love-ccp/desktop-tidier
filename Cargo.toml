@@ -1,0 +1,65 @@
+[package]
+name = "course-organizer"
+version = "0.1.0"
+edition = "2021"
+description = "希沃白板课件定期整理后台工具（单进程纯 Rust，无 GUI 窗口）"
+license = "MIT"
+default-run = "course-organizer"
+
+[lib]
+name = "course_organizer"
+path = "src/lib.rs"
+
+[[bin]]
+name = "course-organizer"
+path = "src/main.rs"
+
+[dependencies]
+# 异步运行时（手动 Runtime::new，不用 #[tokio::main]）
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time", "io-util", "fs", "signal", "process"] }
+# 配置：serde + 严格 JSON + JSON Schema 校验
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+jsonschema = "0.61"
+# 日志：tracing 单文件 writer（不用 tracing-appender）
+tracing = "0.1"
+tracing-subscriber = "0.3"
+# 授时：HTTPS 读 Date 头（rustls，无 OpenSSL）
+reqwest = { version = "0.13", default-features = false, features = ["rustls"] }
+# 编码探测（词库 / 台账可能 GBK）
+chardetng = "1"
+encoding_rs = "0.8"
+# 平台目录
+dirs = "7"
+# 错误处理：lib 用 thiserror，bin 用 anyhow
+thiserror = "2"
+anyhow = "1"
+# 时间
+chrono = "0.4"
+# 关键词匹配（BurntSushi）
+aho-corasick = "1"
+# 并行目录扫描
+jwalk = "0.9"
+# 回收站
+trash = "5"
+# zip 归档（仅 deflate，纯 Rust 后端，避免 C 依赖）
+zip = { version = "9", default-features = false, features = ["deflate"] }
+# 文件监听 + 防抖（锁稳定版；9/0.8 为 RC）
+notify = "8"
+notify-debouncer-full = "0.7"
+# 系统通知
+notify-rust = "4"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+tray-icon = { version = "0.26", default-features = false }
+muda = "0.21"
+windows = { version = "0.62", features = ["Win32_Foundation", "Win32_System_Threading", "Win32_System_Registry", "Win32_UI_Shell"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+ksni = "0.3"
+libc = "0.2"
+rustix = { version = "1", features = ["fs", "process"] }
+
+[profile.release]
+strip = true
+lto = "thin"
