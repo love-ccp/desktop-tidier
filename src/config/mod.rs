@@ -121,6 +121,10 @@ impl Config {
     /// 返回的配置中相对路径已解析为基于配置文件所在目录的绝对路径。
     pub fn load(path: &Path) -> Result<Self> {
         if !path.exists() {
+            // 首次运行：生成 config.json 示例 + 同目录的 schema/示例/词库/说明。
+            if let Some(parent) = path.parent().filter(|p| !p.as_os_str().is_empty()) {
+                schema::seed_support_files(parent)?;
+            }
             Self::write_example(path)?;
         }
         let text = std::fs::read_to_string(path)?;

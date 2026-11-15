@@ -10,6 +10,27 @@ use super::ValidationIssue;
 
 const SCHEMA_STR: &str = include_str!("../../config/schema.json");
 const EXAMPLE_STR: &str = include_str!("../../config/config.example.json");
+const LEXICON_STR: &str = include_str!("../../config/lexicon.txt");
+const DOC_STR: &str = include_str!("../../config/配置说明.md");
+
+/// 首次运行时把 schema / 示例 / 词库 / 说明写入配置目录的 `config/` 子目录
+/// （与示例 `lexicon_path: "config/lexicon.txt"` 及仓库布局一致；不覆盖已有文件）。
+pub fn seed_support_files(config_dir: &std::path::Path) -> crate::Result<()> {
+    let dir = config_dir.join("config");
+    std::fs::create_dir_all(&dir)?;
+    write_if_missing(&dir.join("schema.json"), SCHEMA_STR)?;
+    write_if_missing(&dir.join("config.example.json"), EXAMPLE_STR)?;
+    write_if_missing(&dir.join("lexicon.txt"), LEXICON_STR)?;
+    write_if_missing(&dir.join("配置说明.md"), DOC_STR)?;
+    Ok(())
+}
+
+fn write_if_missing(path: &std::path::Path, content: &str) -> crate::Result<()> {
+    if !path.exists() {
+        std::fs::write(path, content)?;
+    }
+    Ok(())
+}
 
 /// 内置 schema（draft-07）。
 ///

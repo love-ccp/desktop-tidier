@@ -36,6 +36,12 @@ impl SingleFileMakeWriter {
         if self.rotate_if_needed().is_err() {
             return FileWriter::sink();
         }
+        // 确保日志文件所在目录存在（首次写入时创建）。
+        if let Some(parent) = self.path.parent().filter(|p| !p.as_os_str().is_empty()) {
+            if std::fs::create_dir_all(parent).is_err() {
+                return FileWriter::sink();
+            }
+        }
         match OpenOptions::new()
             .create(true)
             .append(true)

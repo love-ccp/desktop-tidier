@@ -9,6 +9,7 @@ mod linux;
 mod windows;
 
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 use crate::Result;
 
@@ -46,13 +47,13 @@ pub struct SingleInstanceGuard {
 }
 
 /// 返回当前平台的适配器实现。
-pub fn adapter() -> Box<dyn PlatformAdapter> {
+pub fn adapter() -> Arc<dyn PlatformAdapter> {
     #[cfg(target_os = "linux")]
     {
-        Box::new(linux::LinuxPlatform::new())
+        Arc::new(linux::LinuxPlatform::new())
     }
     #[cfg(target_os = "windows")]
     {
-        Box::new(windows::WindowsPlatform::new())
+        Arc::new(windows::WindowsPlatform::new())
     }
 }
