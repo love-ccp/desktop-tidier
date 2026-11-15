@@ -37,8 +37,8 @@ pub fn run() -> anyhow::Result<()> {
     let config_path = config_dir.join("config.json");
     let config_store = Arc::new(config::ConfigStore::load(&config_path)?);
 
-    // 单文件日志（依赖配置中的日志级别与路径）。
-    logger::init(&config_store.get())?;
+    // 单文件日志（依赖配置中的日志级别与路径；错误级日志同时触发系统通知）。
+    logger::init(&config_store.get(), platform.clone(), config_store.clone())?;
 
     // 授时时钟（启动时从落盘偏移恢复）。
     let offset_path = config_dir.join("timesync.offset");

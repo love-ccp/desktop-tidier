@@ -3,12 +3,17 @@
 //! 禁止使用 `tracing-appender`（会多文件）；本模块自行实现
 //! 「超过阈值 → 旧文件改名 `.bak`（仅保留 1 份）→ 新建同名文件」的轮转。
 
+use std::fmt;
 use std::fs::{self, File, OpenOptions};
 use std::io::{self, Write};
 use std::path::PathBuf;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
+use tracing::field::{Field, Visit};
+use tracing::Subscriber;
 use tracing_subscriber::fmt::MakeWriter;
+use tracing_subscriber::layer::{Context, Layer, SubscriberExt};
+use tracing_subscriber::util::SubscriberInitExt;
 
 /// 单文件日志 writer：始终只有 1 个日志文件 + 至多 1 个 `.bak`。
 pub struct SingleFileMakeWriter {
@@ -116,10 +121,15 @@ impl Write for FileWriter {
     }
 }
 
-/// 依据配置初始化全局 `tracing` 订阅器（单文件 writer + 级别过滤）。
+/// 初始化订阅器：单文件 writer + 级别过滤 + 「错误级日志 → 系统通知」Layer
+/// （是否静默由 `notify.enabled` 决定，热重载即时生效）。
 ///
-/// 进程内仅能成功调用一次；后续 M9 由 `main` 组装时调用。
-pub fn init(config: &crate::config::Config) -> crate::Result<()> {
+/// 进程内仅能成功调用一次。
+pub fn init(
+    config: &crate::config::Config,
+    platform: Arc<dyn crate::platform::PlatformAdapter>,
+    config_store: Arc<crate::config::ConfigStore>,
+) -> crate::Result<()> {
     let level: tracing::Level = config
         .logger
         .level
@@ -130,7 +140,65 @@ pub fn init(config: &crate::config::Config) -> crate::Result<()> {
         .with_max_level(level)
         .with_writer(writer)
         .with_ansi(false)
+        .finish()
+        .with(NotifyLayer::new(platform, config_store))
         .try_init()
         .map_err(|e| crate::Error::Msg(format!("日志初始化失败：{e}")))?;
     Ok(())
+}
+
+/// 错误级日志 → 系统通知 的 tracing Layer。
+///
+/// 每次 `error!`（及更严重）日志都会尝试系统通知，是否静默由当前配置
+/// `notify.enabled` 决定（热重载即时生效）。
+pub struct NotifyLayer {
+    platform: Arc<dyn crate::platform::PlatformAdapter>,
+    config: Arc<crate::config::ConfigStore>,
+}
+
+impl NotifyLayer {
+    pub fn new(
+        platform: Arc<dyn crate::platform::PlatformAdapter>,
+        config: Arc<crate::config::ConfigStore>,
+    ) -> Self {
+        Self { platform, config }
+    }
+}
+
+impl<S: Subscriber> Layer<S> for NotifyLayer {
+    fn on_event(&self, event: &tracing::Event<'_>, _ctx: Context<'_, S>) {
+        if *event.metadata().level() > tracing::Level::ERROR {
+            return;
+        }
+        let cfg = self.config.get();
+        if !cfg.notify.enabled {
+            return;
+        }
+        let mut visitor = MessageVisitor::default();
+        event.record(&mut visitor);
+        let message = visitor
+            .message
+            .unwrap_or_else(|| event.metadata().target().to_string());
+        let _ = self.platform.notify(&cfg.notify.app_name, &message);
+    }
+}
+
+/// 只抓取 `message` 字段的访问器（通知正文用）。
+#[derive(Default)]
+struct MessageVisitor {
+    message: Option<String>,
+}
+
+impl Visit for MessageVisitor {
+    fn record_str(&mut self, field: &Field, value: &str) {
+        if field.name() == "message" {
+            self.message = Some(value.to_string());
+        }
+    }
+
+    fn record_debug(&mut self, field: &Field, value: &dyn fmt::Debug) {
+        if field.name() == "message" {
+            self.message = Some(format!("{value:?}"));
+        }
+    }
 }
